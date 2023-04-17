@@ -69,7 +69,36 @@ exports.login = async (req, res, next) => { // Connexion d'un utilisateur
     }
 };
 exports.update = async (req, res, next) => { // Modification d'un utilisateur
-
+    const {id, role} = req.body; // Récupération des données du formulaire
+    if(role && id){ // Vérification des données du formulaire
+        if(role === 'admin'){ // Si le rôle est admin
+            await User.findById(id) // Requete SQL pour rechercher l'utilisateur dans la base de données
+                .then((user) => { // Si l'utilisateur est trouvé)
+                    if(user.role !== 'admin'){ // Si l'utilisateur n'est pas déjà admin
+                        user.role = role; // On modifie le rôle de l'utilisateur
+                        user.save((err) => {
+                            if(err) {
+                                res.status(400).json({ // Si l'utilisateur n'a pas pu être modifié
+                                    message: 'Une erreur est survenue.', // Message d'erreur
+                                    error: err.message, // Message d'erreur
+                                });
+                            } else {
+                                res.status(200).json({ // On renvoie un message de succès
+                                    message: `Utilisateur ${user} modifié avec succès.`, // Message de succès
+                                    user, // On renvoie l'id de l'utilisateur
+                                });
+                            }
+                        }); // On sauvegarde les modifications
+                    }
+                })
+                .catch((error) => { // Si l'utilisateur n'a pas pu être trouvé
+                    res.status(400).json({ // On renvoie une erreur
+                        message: 'Une erreur est survenue.', // Message d'erreur
+                        error: error.message, // Message d'erreur
+                    })
+                });
+        }
+    }
 };
 exports.delete = async (req, res, next) => { // Suppression d'un utilisateur
     const {id} = req.body; // Récupération de l'id de l'utilisateur
