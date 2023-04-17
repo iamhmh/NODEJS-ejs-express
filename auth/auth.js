@@ -48,6 +48,18 @@ exports.login = async (req, res, next) => { // Connexion d'un utilisateur
                 message: 'L\'utilisateur n\'a pas été trouvé.', // Message d'erreur
                 error: error.message, // Message d'erreur
             });
+        } else {
+            bcrypt.compare(password, user.password).then(function (result) { // On compare le mot de passe entré avec le hash stocké dans la base de données))
+                if(result) { // Si le mot de passe est correct
+                    const maxAge = 3*60*60; // Durée de vie du token
+                    const token = jwt.signing({id: user._id, username, role: user.role}, jwtsecret, {expiresIn: maxAge}); // Création du token
+                } else {
+                    res.status(400).json({ // Si le mot de passe est incorrect
+                        message: 'Votre identifiant ou votre mot de passe est incorrect.', // Message d'erreur
+                        error: error.message, // Message d'erreur
+                    });
+                }
+            });
         }
     } catch(err){ // Si l'utilisateur n'a pas pu être trouvé
         res.status(400).json({ // Si l'utilisateur n'a pas pu être trouvé
@@ -56,6 +68,57 @@ exports.login = async (req, res, next) => { // Connexion d'un utilisateur
         });
     }
 };
-exports.update = async (req, res, next) => {};
-exports.delete = async (req, res, next) => {};
-exports.getUser = async (req, res, next) => {};
+exports.update = async (req, res, next) => { // Modification d'un utilisateur
+
+};
+exports.delete = async (req, res, next) => { // Suppression d'un utilisateur
+    const {id} = req.body; // Récupération de l'id de l'utilisateur
+    await User.findById(id) // Requete SQL pour supprimer l'utilisateur
+        .then((user) => {
+            user.remove();
+            res.status(200).json({ // On renvoie un message de succès
+                message: `Utilisateur ${user} supprimé avec succès.`, // Message de succès
+                user, // On renvoie l'id de l'utilisateur
+            });
+        })
+        .catch((error) => { // Si l'utilisateur n'a pas pu être supprimé
+            res.status(400).json({ // On renvoie une erreur
+                message: 'Une erreur est survenue.', // Message d'erreur
+                error: error.message, // Message d'erreur
+            })
+        });
+
+    /*
+    const {id} = req.body; // Récupération de l'id de l'utilisateur
+    await User.findByIdAndDelete(id) // Requete SQL pour supprimer l'utilisateur
+        .then((user) => { // Si l'utilisateur est supprimé avec succès
+            res.status(200).json({ // On renvoie un message de succès
+                message: 'Utilisateur supprimé avec succès.', // Message de succès
+                user: user._id, // On renvoie l'id de l'utilisateur
+            });
+        })
+        .catch((error) => { // Si l'utilisateur n'a pas pu être supprimé
+            res.status(400).json({ // On renvoie une erreur
+                message: 'Une erreur est survenue.', // Message d'erreur
+                error: error.message, // Message d'erreur
+            })
+        });
+    */
+};
+exports.getUsers = async (req, res, next) => { // Récupération de tous les utilisateurs
+    await User.find({}) // Requete SQL pour récupérer tous les utilisateurs
+      .then((users) => {   // Si la requete est un succès
+        const userFunction = users.map((user) => { // On map les utilisateurs
+          const container = {}; // On crée un objet vide
+          container.username = user.username; // On ajoute les données de l'utilisateur dans l'objet
+          container.role = user.role; // On ajoute les données de l'utilisateur dans l'objet
+          container.id = user._id; // On ajoute les données de l'utilisateur dans l'objet
+  
+          return container; // On renvoie l'objet
+        });
+        res.status(200).json({ user: userFunction }); // On renvoie les utilisateurs
+      })
+      .catch((err) => // Si la requete n'est pas un succès
+        res.status(401).json({ message: "Not successful", error: err.message }) // On renvoie une erreur
+      );
+};
