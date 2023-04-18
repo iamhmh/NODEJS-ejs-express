@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt'); // Importation de bcrypt
 const jwt = require('jsonwebtoken'); // Importation de jsonwebtoken
 const jwtsecret = 'jBQBHSDHJBVHKBQFHUDWSHVGCDCBCHJBWHJCBSHG'; // Clé secrète pour la génération du token
 
-//CRUD
+//CRUD - Create, Read, Update, Delete
 
 exports.register = async (req, res, next) => { // Création d'un nouvel utilisateur
     const {username, password} = req.body; // Récupération des données du formulaire
