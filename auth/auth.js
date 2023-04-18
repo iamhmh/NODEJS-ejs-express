@@ -8,18 +8,18 @@ const jwtsecret = 'jBQBHSDHJBVHKBQFHUDWSHVGCDCBCHJBWHJCBSHG'; // Clé secrète p
 exports.register = async (req, res, next) => { // Création d'un nouvel utilisateur
     const {username, password} = req.body; // Récupération des données du formulaire
     if(password.length < 6) { // Vérification de la longueur du mot de passe
-        return res.status(400).json({ // Si le mot de passe est inférieur à 6 caractères, on renvoie une erreur
+        res.status(400).json({ // Si le mot de passe est inférieur à 6 caractères, on renvoie une erreur
             message: 'Le mot de passe doit contenir au moins 6 caractères.'
         }); // On renvoie une erreur
     }
     bcrypt.hash(password, 10).then(async (hash) => { // On hash le mot de passe
         await User.create({ // On crée l'utilisateur
             username, 
-            password:hash // On stocke le hash du mot de passe
+            password: hash, // On stocke le hash du mot de passe
         })
         .then((User) => { // Si l'utilisateur est créé avec succès
             const maxAge = 3*60*60; // Durée de vie du token
-            const token = jwt.signing({id: User._id, username, role: User.role}, jwtsecret, {expiresIn: maxAge}); // Création du token
+            const token = jwt.sign({id: User._id, username, role: User.role}, jwtsecret, {expiresIn: maxAge}); // Création du token
             res.cookie('jwt', token, {httpOnly: true, maxAge: maxAge*1000}); // On stocke le token dans un cookie
             res.status(201).json({ // On renvoie un message de succès
                 message: 'Utilisateur créé avec succès.', // Message de succès
@@ -52,11 +52,11 @@ exports.login = async (req, res, next) => { // Connexion d'un utilisateur
             bcrypt.compare(password, user.password).then(function (result) { // On compare le mot de passe entré avec le hash stocké dans la base de données))
                 if(result) { // Si le mot de passe est correct
                     const maxAge = 3*60*60; // Durée de vie du token
-                    const token = jwt.signing({id: user._id, username, role: user.role}, jwtsecret, {expiresIn: maxAge}); // Création du token
+                    const token = jwt.sign({id: user._id, username, role: user.role}, jwtsecret, {expiresIn: maxAge}); // Création du token
+                    res.cookie('jwt', token, {httpOnly: true, maxAge: maxAge*1000}); // On stocke le token dans un cookie
                 } else {
                     res.status(400).json({ // Si le mot de passe est incorrect
                         message: 'Votre identifiant ou votre mot de passe est incorrect.', // Message d'erreur
-                        error: error.message, // Message d'erreur
                     });
                 }
             });
