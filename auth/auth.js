@@ -100,7 +100,7 @@ exports.update = async (req, res, next) => { // Modification d'un utilisateur
         }
     }
 };
-exports.delete = async (req, res, next) => { // Suppression d'un utilisateur
+exports.deleteUser = async (req, res, next) => { // Suppression d'un utilisateur
     const {id} = req.body; // Récupération de l'id de l'utilisateur
     await User.findById(id) // Requete SQL pour supprimer l'utilisateur
         .then((user) => {
